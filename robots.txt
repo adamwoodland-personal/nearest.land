@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nearest.land/sitemap.xml
+Sitemap: https://whatsacross.com/sitemap.xml

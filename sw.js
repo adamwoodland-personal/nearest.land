@@ -1,10 +1,10 @@
-// Service worker for nearest.land (same pattern as orrery.live / quickresponse.now).
+// Service worker for whatsacross.com (same pattern as orrery.live / quickresponse.now).
 //
 //  - Code, data and navigations: NETWORK-FIRST, cache fallback. The 3.7 MB country
 //    dataset and three.js are precached so the whole globe works offline once loaded.
 //  - Images: CACHE-FIRST.
 //  - Bump CACHE on deploys that change any precached file.
-const CACHE = 'nl-v50';
+const CACHE = 'wa-v1';
 const CORE = [
 	'/',
 	'/index.html',

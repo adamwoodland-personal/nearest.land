@@ -1316,7 +1316,7 @@ async function shareView() {
   const url = location.href;
   const status = $('#viewLinkStatus');
   const title = document.title;
-  const text = ($('#place .name') || {}).textContent || 'Nearest Land';
+  const text = ($('#place .name') || {}).textContent || "What's Across";
   if (navigator.share) {
     try { await navigator.share({ title, text, url }); return; } catch (e) { if (e.name === 'AbortError') return; }
   }
@@ -1781,10 +1781,10 @@ puzzle.revealBtn.addEventListener('click', () => {
 });
 puzzle.shareBtn.addEventListener('click', async () => {
   const rows = puzzle.guesses.map((g) => `${squaresFor(g.km, g.km <= WIN_KM)} ${fmtKm(g.km)}${g.km <= WIN_KM ? '' : ' ' + arrowFor(g.bearing)}`);
-  const text = `🌍 nearest.land daily ${puzzleDate()} - ${puzzle.won ? puzzle.guesses.length : 'X'} of ${GUESS_LIMIT}
+  const text = `🌍 What's Across daily ${puzzleDate()} - ${puzzle.won ? puzzle.guesses.length : 'X'} of ${GUESS_LIMIT}
 ${rows.join('\n')}
 Guess the shore from what is across its water:
-https://nearest.land/`;
+https://whatsacross.com/`;
   if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { if (e.name === 'AbortError') return; } }
   try { await navigator.clipboard.writeText(text); puzzle.shareBtn.textContent = 'Copied!'; setTimeout(() => { puzzle.shareBtn.textContent = 'Share result'; }, 1500); } catch (e) { /* ignore */ }
 });

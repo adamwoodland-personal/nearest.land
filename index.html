@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nearest Land - what's directly across the ocean from any coastline</title>
+  <title>What's across the ocean from me? | What's Across</title>
   <meta name="description" content="What is directly across the ocean from you? Click any coastline on a 3D globe and see which country lies across the water in every direction - each bearing followed along a great circle to its first landfall, with your antipode marked. Free, runs in your browser." />
   <meta name="keywords" content="what's directly across the ocean, what country is across the ocean from me, across the sea from here, opposite coast, antipode finder, great circle, first landfall, beyond the sea map, interactive globe" />
-  <link rel="canonical" href="https://nearest.land/" />
+  <link rel="canonical" href="https://whatsacross.com/" />
 
   <meta property="og:type"        content="website" />
-  <meta property="og:url"         content="https://nearest.land/" />
-  <meta property="og:site_name"   content="nearest.land" />
-  <meta property="og:title"       content="Nearest Land - what's directly across the ocean from any coastline" />
+  <meta property="og:url"         content="https://whatsacross.com/" />
+  <meta property="og:site_name"   content="What's Across" />
+  <meta property="og:title"       content="What's across the ocean from you? Every direction, any coastline" />
   <meta property="og:description" content="Click a coastline on a 3D globe. Every direction over the sea is followed along a great circle to its first landfall - and the answers are not what you'd guess." />
-  <meta property="og:image"       content="https://nearest.land/og-image.png" />
+  <meta property="og:image"       content="https://whatsacross.com/og-image.png" />
   <meta property="og:image:width"  content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt"   content="nearest.land - a 360-degree view chart showing which countries lie across the water" />
+  <meta property="og:image:alt"   content="What's Across - a 360-degree view chart showing which countries lie across the water" />
   <meta property="og:locale"      content="en_GB" />
   <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="Nearest Land - what's directly across the ocean from any coastline" />
+  <meta name="twitter:title"       content="What's across the ocean from you? Every direction, any coastline" />
   <meta name="twitter:description" content="Click a coastline on a 3D globe." />
-  <meta name="twitter:image"       content="https://nearest.land/og-image.png" />
+  <meta name="twitter:image"       content="https://whatsacross.com/og-image.png" />
 
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -34,8 +34,9 @@
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "Nearest Land",
-    "url": "https://nearest.land/",
+    "name": "What's Across",
+    "alternateName": "whatsacross.com",
+    "url": "https://whatsacross.com/",
     "description": "Click any coastline on a 3D globe and see which country lies across the water in every direction, following great circles to the first landfall.",
     "applicationCategory": "EducationalApplication",
     "operatingSystem": "Any",
@@ -55,7 +56,7 @@
         "name": "What is directly across the ocean from me?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Pick your own stretch of coast on the globe - or press Request Location on a phone - and every one of the 360 directions out to sea is followed to the country it reaches. On a phone you can then hold the device up and read off whatever lies across the water in the direction you are facing. The answers for New York, Miami, Lisbon, Cape Town, Sydney and 32 other well-known coastlines are listed at https://nearest.land/across/."
+          "text": "Pick your own stretch of coast on the globe - or press Request Location on a phone - and every one of the 360 directions out to sea is followed to the country it reaches. On a phone you can then hold the device up and read off whatever lies across the water in the direction you are facing. The answers for New York, Miami, Lisbon, Cape Town, Sydney and 32 other well-known coastlines are listed at https://whatsacross.com/across/."
         }
       },
       {
@@ -105,7 +106,7 @@
 <body>
 
 <header class="top">
-  <h1 class="brand">nearest<span class="brand-tld">.land</span> <span class="brand-tag">what's directly across the ocean?</span></h1>
+  <h1 class="brand">What's <span class="brand-tld">Across</span> <span class="brand-tag">the ocean from any coastline?</span></h1>
   <p class="sub">Click to pick a point - a coast in Coast mode, anywhere in the other modes · right-drag to turn · scroll to zoom · touch: tap, drag, pinch.</p>
   <span class="viewlink-wrap"><button type="button" class="daily-btn" id="daily">Daily puzzle</button><button type="button" class="viewlink" id="viewLink" disabled title="Pick a point first">Share this view</button><a class="viewlink" id="weatherLink" href="https://meanweather.net/" hidden target="_blank" rel="noopener" title="The forecast for this point on meanweather.net">Weather here</a><span class="viewlink-status" id="viewLinkStatus"></span></span>
 </header>
@@ -259,7 +260,7 @@
       <p>Free, open source under the MIT licence, and no tracking of any kind. It installs as a web app on phones and desktops and keeps working offline once loaded.</p>
     </div>
   </details>
-    <p class="note contact">Free, open source (MIT), nothing tracked. Questions or corrections: <a href="mailto:adam@nearest.land">adam@nearest.land</a></p>
+    <p class="note contact">Free, open source (MIT), nothing tracked. Questions or corrections: <a href="mailto:adam@whatsacross.com">adam@whatsacross.com</a></p>
     <p class="note">Like this? Also see <a href="https://orrery.live/">orrery.live</a> for a 3D tour of the solar system, and more tools at <a href="https://games.adamwoodland.com/">Adam's Arcade</a>. Made by <a href="https://adamwoodland.com/">Adam Woodland</a>.</p>
     <p class="note credits">Built with <a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a> (MIT) and <a href="https://github.com/topojson/topojson-client" target="_blank" rel="noopener">topojson-client</a> (ISC). Country outlines and the Terrain map: <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a> (public domain), outlines via <a href="https://github.com/topojson/world-atlas" target="_blank" rel="noopener">world-atlas</a> (ISC). Satellite map: <a href="https://visibleearth.nasa.gov/collection/1484/blue-marble" target="_blank" rel="noopener">NASA Blue Marble</a> (public domain). Code: <a href="LICENSE">MIT licence</a>. Design, code and content developed with the assistance of AI (Anthropic Claude).</p>
   </aside>

@@ -1,6 +1,6 @@
-# nearest.land
+# What's Across
 
-**Live: <https://nearest.land/>**
+**Live: <https://whatsacross.com/>** (formerly nearest.land)
 
 Click any coastline on a 3D globe and see which country lies across the water in every
 direction. Every compass bearing (sampled each 0.25°, or 0.1° in high detail - 1,440 or
