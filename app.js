@@ -715,7 +715,9 @@ function setDressing(on) {
 // Cosmetic only: the analysis raster, borders, labels and paths are unaffected. Fetched on
 // first use; the service worker then keeps them cache-first like other images.
 const LAYERS = ['political', 'terrain', 'satellite'];
-let LAYER = 'political';
+// Satellite is the default since 2026-10-04 (it was political); a saved choice still wins.
+const DEFAULT_LAYER = 'satellite';
+let LAYER = DEFAULT_LAYER;
 try { const l = localStorage.getItem('nl-layer'); if (LAYERS.includes(l)) LAYER = l; } catch (e) { /* ignore */ }
 // 16384 (~11 MB, ~2.4 km/px) only where the GPU and memory clearly allow it; the political
 // canvas texture stays at TEX_W regardless.
@@ -789,7 +791,7 @@ let lastAt = null;
 let lastWeatherName = '';   // "Country (33.87°S, 151.21°E)" for the meanweather.net link
 function writeUrl() {
   if (!lastAt) return;
-  history.replaceState(null, '', `?at=${lastAt}${MODE !== 'coast' ? `&mode=${MODE}` : ''}${STEP !== 0.25 ? `&step=${STEP}` : ''}${LAYER !== 'political' ? `&layer=${LAYER}` : ''}`);
+  history.replaceState(null, '', `?at=${lastAt}${MODE !== 'coast' ? `&mode=${MODE}` : ''}${STEP !== 0.25 ? `&step=${STEP}` : ''}${LAYER !== DEFAULT_LAYER ? `&layer=${LAYER}` : ''}`);
   // the picked point's forecast on meanweather.net (same ?at=lat,lon convention)
   const wl = $('#weatherLink');
   // tmp=1: meanweather.net shows the place without adding it to its recent-places tabs
@@ -821,19 +823,21 @@ async function refreshLayer() {
 layerSel.value = LAYER;
 layerSel.addEventListener('change', () => setLayer(layerSel.value));
 // A shared link fully determines the view: with ?at= present, a missing &layer= means the
-// political default, not this device's saved preference. (Standalone launches ignore the
-// URL entirely - pickFromUrl strips it - so leave their saved layer alone.)
+// default layer, not this device's saved preference. (Links written before 2026-10-04 meant
+// political by omitting it; they now open on satellite - cosmetic only. Standalone launches
+// ignore the URL entirely - pickFromUrl strips it - so leave their saved layer alone.)
 {
   const q = new URLSearchParams(location.search);
   const standaloneLaunch = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   if (!standaloneLaunch) {
     const l = q.get('layer');
     if (LAYERS.includes(l)) { LAYER = l; layerSel.value = l; }
-    else if (q.has('at')) { LAYER = 'political'; layerSel.value = 'political'; }
+    else if (q.has('at')) { LAYER = DEFAULT_LAYER; layerSel.value = DEFAULT_LAYER; }
   }
 }
-// When terrain is the saved layer, its download is folded into the initial loading bar (with a
-// skip button) at the end of startup, so the political colours never flash first.
+// When the starting layer is terrain or satellite (the default), its download is folded into
+// the initial loading bar (with a skip button) at the end of startup, so the political colours
+// never flash first.
 scene.add(globe);
 await progress(88, 'Drawing coastlines and borders…');
 
@@ -1586,7 +1590,10 @@ if (LAYER !== 'political') {
   skip.addEventListener('click', () => { skip.disabled = true; ac.abort(); }, { once: true });
   await progress(90, `Downloading the ${LAYER} map…`);
   const ok = await applyLayer((f) => { bar.style.width = `${90 + 9 * f}%`; }, ac.signal);
-  if (!ok) setLayer('political');   // skipped or offline: political, and remembered
+  // Skipped: political, and remembered. A failed download falls back for this visit only, so
+  // one bad connection does not pin a visitor to political for good.
+  if (!ok && ac.signal.aborted) setLayer('political');
+  else if (!ok) { LAYER = 'political'; layerSel.value = 'political'; }
   skip.hidden = true;
 }
 await progress(100, 'Ready');
