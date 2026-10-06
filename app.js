@@ -788,14 +788,14 @@ async function applyLayer(onPct, signal) {
 const layerSel = $('#layer');
 // The shareable URL: the picked point plus any non-default mode and map layer.
 let lastAt = null;
-let lastWeatherName = '';   // "Country (33.87°S, 151.21°E)" for the meanweather.net link
+let lastWeatherName = '';   // "Country (33.87°S, 151.21°E)" for the weathermodels.app link
 function writeUrl() {
   if (!lastAt) return;
   history.replaceState(null, '', `?at=${lastAt}${MODE !== 'coast' ? `&mode=${MODE}` : ''}${STEP !== 0.25 ? `&step=${STEP}` : ''}${LAYER !== DEFAULT_LAYER ? `&layer=${LAYER}` : ''}`);
-  // the picked point's forecast on meanweather.net (same ?at=lat,lon convention)
+  // the picked point's forecast on weathermodels.app (same ?at=lat,lon convention)
   const wl = $('#weatherLink');
-  // tmp=1: meanweather.net shows the place without adding it to its recent-places tabs
-  if (wl) { wl.href = `https://meanweather.net/?at=${lastAt}&n=${encodeURIComponent(lastWeatherName)}&tmp=1`; wl.hidden = false; }
+  // tmp=1: weathermodels.app shows the place without adding it to its recent-places tabs
+  if (wl) { wl.href = `https://weathermodels.app/?at=${lastAt}&n=${encodeURIComponent(lastWeatherName)}&tmp=1`; wl.hidden = false; }
 }
 const layerStatus = $('#layerStatus');
 function setLayer(layer) {
