@@ -1478,9 +1478,10 @@ function requestGps(fly, coarse) {
 
 // What to change when location is blocked, in a card over the top of the globe (on phones the
 // results panel is a closed sheet). On an iPhone it depends on how the page is running: an app
-// added to the Home Screen follows Location Services > In-App Web Browsing (setting Safari
-// Websites made no difference - found on an iPhone 2026-10-10), Safari follows Safari
-// Websites, and Firefox/Chrome/Edge follow their own app's entry there.
+// added to the Home Screen follows Location Services > System Services > In-App Web Browsing,
+// an on/off switch (setting Safari Websites made no difference - found on an iPhone
+// 2026-10-10), Safari follows Safari Websites, and Firefox/Chrome/Edge follow their own
+// app's entry there.
 const locHelp = $('#locHelp');
 $('#locHelpClose').addEventListener('click', () => { locHelp.hidden = true; });
 function locationHelp(code) {
@@ -1492,9 +1493,9 @@ function locationHelp(code) {
     const browser = (/FxiOS/.test(UA) && 'Firefox') || (/CriOS/.test(UA) && 'Chrome') || (/EdgiOS/.test(UA) && 'Edge') || '';
     const LS = 'Settings › Privacy & Security › Location Services › ';
     let path, tail;
-    if (standalone) { path = LS + 'In-App Web Browsing'; tail = ' set to While Using the App, then try again.'; }
+    if (standalone) { path = LS + 'System Services › In-App Web Browsing'; tail = ' switched on, then try again.'; }
     else if (browser) { path = LS + browser; tail = ` set to While Using the App, and allow location for this site when ${browser} asks.`; }
-    else { path = LS + 'Safari Websites'; tail = ' set to While Using the App (In-App Web Browsing instead if this page was opened from inside another app).'; }
+    else { path = LS + 'Safari Websites'; tail = ' set to While Using the App (or, if this page was opened from inside another app, System Services › In-App Web Browsing switched on).'; }
     const b = document.createElement('b'); b.textContent = path;
     text.append(code === 1 ? `On ${device} this needs ` : `If this keeps happening, on ${device} check `, b, tail);
   } else {
