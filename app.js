@@ -1419,16 +1419,23 @@ $('#jump').addEventListener('change', (e) => {
 
 // ---------------------------------------------------------------- device location + compass
 //
-// The button exists only on devices that can give both a position and a compass heading:
-// iOS (DeviceOrientationEvent.requestPermission) or Android-style absolute orientation on a
-// touch device. It reads "Request Location" until a fix arrives, then "Show Me", which opens
-// the compass panel. The blue dot still appears automatically when permission is already
-// granted, button or not.
+// The button exists only on touch devices that can give both a position and a compass
+// heading: a DeviceOrientationEvent.requestPermission (iOS, and Android Chrome since 151) or
+// the absolute orientation event (Android). It reads "Request Location" until a fix arrives,
+// then "Show Me", which opens the compass panel. The blue dot still appears automatically
+// when permission is already granted, button or not.
 const locateBtn = $('#locate');
 const hasGeo = !!navigator.geolocation;
-const iosCompass = typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
-const absCompass = 'ondeviceorientationabsolute' in window && navigator.maxTouchPoints > 0;
-const directionCapable = iosCompass || absCompass;
+const askCompass = typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function';
+const absCompass = 'ondeviceorientationabsolute' in window;
+const directionCapable = navigator.maxTouchPoints > 0 && (askCompass || absCompass);
+// Listen to both where both exist: iOS puts webkitCompassHeading on the plain event, Android
+// Chrome's plain event is relative (no north) and its compass is the absolute one.
+const COMPASS_EVENTS = absCompass ? ['deviceorientationabsolute', 'deviceorientation'] : ['deviceorientation'];
+// iPadOS reports itself as a Mac; touch gives it away.
+const UA = navigator.userAgent;
+const isIOS = /iPhone|iPad|iPod/.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1);
+const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
 let gpsPos = null;
 if (hasGeo && directionCapable) locateBtn.hidden = false;
 
@@ -1442,19 +1449,59 @@ function showGps(lat, lon) {
   locateBtn.textContent = 'Show Me';
   locateBtn.title = 'Point your phone at the sea and see which country is in front of you';
 }
-function requestGps(fly) {
+// GeolocationPositionError codes: 1 refused (by the visitor, the browser or the phone's own
+// settings), 2 no position, 3 timed out.
+const GEO_FAIL = { 1: 'Location blocked', 2: 'Location unavailable', 3: 'Location timed out' };
+function requestGps(fly, coarse) {
   if (!hasGeo) return;
   locateBtn.textContent = 'Locating…';
   navigator.geolocation.getCurrentPosition(
     (pos) => {
+      locHelp.hidden = true;
       showGps(pos.coords.latitude, pos.coords.longitude);
       if (fly) flyTo(pos.coords.latitude, pos.coords.longitude);
       // In Anywhere / Over-land mode the user's own position is a valid pick: pin it straight away.
       if (fly && MODE !== 'coast') pick(pos.coords.latitude, pos.coords.longitude);
     },
-    () => { locateBtn.textContent = 'Location unavailable'; },
-    { enableHighAccuracy: true, timeout: 12000, maximumAge: 120000 }
+    (err) => {
+      const code = err && err.code;
+      // A GPS fix can be slow (indoors, or a cold start): try once more for a coarse position.
+      if (code !== 1 && !coarse) { requestGps(fly, true); return; }
+      locateBtn.textContent = GEO_FAIL[code] || 'Location unavailable';
+      // Explain only a block (on iOS "unavailable" may be one too); a timeout needs no help.
+      if (fly && (code === 1 || (isIOS && code === 2))) locationHelp(code);
+    },
+    coarse ? { enableHighAccuracy: false, timeout: 20000, maximumAge: 600000 }
+      : { enableHighAccuracy: true, timeout: 12000, maximumAge: 120000 }
   );
+}
+
+// What to change when location is blocked, in a card over the top of the globe (on phones the
+// results panel is a closed sheet). On an iPhone it depends on how the page is running: an app
+// added to the Home Screen follows Location Services > In-App Web Browsing (setting Safari
+// Websites made no difference - found on an iPhone 2026-10-10), Safari follows Safari
+// Websites, and Firefox/Chrome/Edge follow their own app's entry there.
+const locHelp = $('#locHelp');
+$('#locHelpClose').addEventListener('click', () => { locHelp.hidden = true; });
+function locationHelp(code) {
+  const text = $('#locHelpText');
+  text.replaceChildren();
+  $('#locHelpTitle').textContent = code === 1 ? 'Location is blocked' : 'Location unavailable';
+  if (isIOS) {
+    const device = /iPad|Macintosh/.test(UA) ? 'iPad' : 'iPhone';
+    const browser = (/FxiOS/.test(UA) && 'Firefox') || (/CriOS/.test(UA) && 'Chrome') || (/EdgiOS/.test(UA) && 'Edge') || '';
+    const LS = 'Settings › Privacy & Security › Location Services › ';
+    let path, tail;
+    if (standalone) { path = LS + 'In-App Web Browsing'; tail = ' set to While Using the App, then try again.'; }
+    else if (browser) { path = LS + browser; tail = ` set to While Using the App, and allow location for this site when ${browser} asks.`; }
+    else { path = LS + 'Safari Websites'; tail = ' set to While Using the App (In-App Web Browsing instead if this page was opened from inside another app).'; }
+    const b = document.createElement('b'); b.textContent = path;
+    text.append(code === 1 ? `On ${device} this needs ` : `If this keeps happening, on ${device} check `, b, tail);
+  } else {
+    text.append('Allow location for whatsacross.com in the browser\'s site settings, and check the phone\'s location is switched on.');
+  }
+  text.append(' You can still pick your spot on the globe.');
+  locHelp.hidden = false;
 }
 locateBtn.addEventListener('click', () => {
   if (gpsPos) openCompass();
@@ -1471,7 +1518,7 @@ function distKm(a, b) {
 const compass = {
   el: $('#compass'), dial: $('#compassDial'), ring: $('#compassRing'), headingEl: $('#compassHeading'),
   countryEl: $('#compassCountry'), noteEl: $('#compassNote'),
-  res: null, heading: null, listener: null, eventName: null, timer: null,
+  res: null, heading: null, listener: null, timer: null,
 };
 { // tick marks every 10°, longer every 30°
   const g = document.getElementById('compassTicks');
@@ -1519,36 +1566,62 @@ async function openCompass() {
   await startHeading();
 }
 
-// Attach the device-orientation listener (asking iOS for permission - must be inside a user
-// gesture, which both the Show Me tap and a mode-select change are).
+// Attach the device-orientation listeners (asking for permission where the browser offers it -
+// must be inside a user gesture, which both the Show Me tap and a mode-select change are).
+const COMPASS_DENIED = isIOS
+  ? 'Compass access is off - allow Motion & Orientation Access for this site and try again.'
+  : 'Compass access is off - allow Motion sensors in this site\'s settings and try again.';
 async function startHeading() {
   if (compass.listener) return;
-  // Heading source: iOS needs permission inside this tap; Android gives absolute alpha.
-  if (iosCompass) {
+  // iOS shows a prompt; Android Chrome (151+) only reports its Motion sensors setting. `true`
+  // asks for the magnetometer too, which a heading needs.
+  if (askCompass) {
     try {
-      const state = await DeviceOrientationEvent.requestPermission();
-      if (state !== 'granted') { compass.noteEl.textContent = 'Compass permission was not granted - allow Motion & Orientation access and try again.'; return; }
-    } catch (e) { compass.noteEl.textContent = 'Compass permission was not granted.'; return; }
-    compass.eventName = 'deviceorientation';
-  } else {
-    compass.eventName = 'deviceorientationabsolute';
+      const state = await DeviceOrientationEvent.requestPermission(true);
+      if (state === 'denied') { compass.noteEl.textContent = COMPASS_DENIED; return; }
+    } catch (e) { compass.noteEl.textContent = COMPASS_DENIED; return; }
   }
   compass.listener = onOrientation;
-  window.addEventListener(compass.eventName, compass.listener);
+  for (const ev of COMPASS_EVENTS) window.addEventListener(ev, compass.listener);
   clearTimeout(compass.timer);
   compass.timer = setTimeout(() => {
     if (compass.heading === null) compass.noteEl.textContent = 'No compass reading yet - move the phone in a figure of eight to calibrate, and make sure location and motion access are allowed.';
   }, 4000);
 }
 
+function screenAngle() {
+  return (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle : (window.orientation || 0);
+}
+// The way the user faces, from an absolute orientation event (alpha/beta/gamma relative to
+// east/north/up). 360 - alpha is only right with the phone flat, and near upright - how people
+// hold it to look out to sea - alpha and gamma swing wildly. Instead use the screen's
+// left-to-right axis: the user faces square to it, whether the phone is flat, upright or
+// anywhere between, and tipping or rolling the phone does not swing it. Only with that axis
+// near vertical (phone on its side, screen not rotated) does it fail; then the camera axis,
+// out of the back, gives the direction instead.
+function absHeading(e) {
+  if (typeof e.alpha !== 'number' || typeof e.beta !== 'number' || typeof e.gamma !== 'number') return null;
+  const a = e.alpha * DEG, b = e.beta * DEG, g = e.gamma * DEG, s = screenAngle() * DEG;
+  const cA = Math.cos(a), sA = Math.sin(a), cB = Math.cos(b), sB = Math.sin(b), cG = Math.cos(g), sG = Math.sin(g);
+  // Device x, y, z axes in earth coordinates (columns of R = Rz(alpha) Rx(beta) Ry(gamma)),
+  // east and north parts only.
+  const xE = cA * cG - sA * sB * sG, xN = cG * sA + cA * sB * sG;
+  const yE = -cB * sA, yN = cA * cB;
+  const zE = cA * sG + cG * sA * sB, zN = sA * sG - cA * cG * sB;
+  // Screen right = device x turned clockwise by the screen angle; facing is 90° anticlockwise
+  // from it, seen from above.
+  const rE = Math.cos(s) * xE - Math.sin(s) * yE, rN = Math.cos(s) * xN - Math.sin(s) * yN;
+  let east = -rN, north = rE;
+  if (Math.hypot(east, north) < 0.3) { east = -zE; north = -zN; }
+  if (Math.hypot(east, north) < 0.3) return null;
+  return (Math.atan2(east, north) / DEG + 360) % 360;
+}
+
 function onOrientation(e) {
   let h = null;
-  if (typeof e.webkitCompassHeading === 'number' && !Number.isNaN(e.webkitCompassHeading)) h = e.webkitCompassHeading;
-  else if (e.absolute && typeof e.alpha === 'number') h = (360 - e.alpha) % 360;
+  if (typeof e.webkitCompassHeading === 'number' && !Number.isNaN(e.webkitCompassHeading)) h = (e.webkitCompassHeading + screenAngle() + 360) % 360;
+  else if (e.absolute === true) h = absHeading(e);
   if (h === null) return;
-  // Account for landscape rotation of the screen.
-  const angle = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle : (window.orientation || 0);
-  h = (h + angle + 360) % 360;
   // Light smoothing across the 0/360 wrap.
   // Smooth, and keep `rot` unwrapped: the ring is rotated by `rot`, so crossing north never
   // animates a full turn the other way (which made the letters appear twice).
@@ -1572,7 +1645,7 @@ function updateCompass() {
 
 function closeCompass() {
   compass.el.hidden = true;
-  if (compass.listener) window.removeEventListener(compass.eventName, compass.listener);
+  if (compass.listener) for (const ev of COMPASS_EVENTS) window.removeEventListener(ev, compass.listener);
   compass.listener = null;
   clearTimeout(compass.timer);
 }

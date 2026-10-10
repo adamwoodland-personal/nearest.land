@@ -114,6 +114,11 @@
 <main class="layout">
   <section class="globe-wrap" aria-label="Globe">
     <canvas id="globe"></canvas>
+    <div class="lochelp" id="locHelp" hidden role="alert">
+      <button type="button" class="compass-close" id="locHelpClose" aria-label="Close">×</button>
+      <p class="lochelp-title" id="locHelpTitle"></p>
+      <p class="lochelp-text" id="locHelpText"></p>
+    </div>
     <div class="puzzle" id="puzzle" hidden role="dialog" aria-label="Daily puzzle">
       <div class="puzzle-box">
         <button type="button" class="compass-close puzzle-min" id="puzzleMin" aria-label="Minimise">–</button>
