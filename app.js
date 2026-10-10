@@ -1493,7 +1493,9 @@ function locationHelp(code) {
     const browser = (/FxiOS/.test(UA) && 'Firefox') || (/CriOS/.test(UA) && 'Chrome') || (/EdgiOS/.test(UA) && 'Edge') || '';
     const LS = 'Settings › Privacy & Security › Location Services › ';
     let path, tail;
-    if (standalone) { path = LS + 'System Services › In-App Web Browsing'; tail = ' switched on, then try again.'; }
+    // The app only reads that switch when it starts: until it is closed and reopened, every
+    // request keeps failing (seen 2026-10-10), so "try again" alone would not work.
+    if (standalone) { path = LS + 'System Services › In-App Web Browsing'; tail = ` switched on. Then close this app fully (swipe it away in the app switcher) and open it again - the ${device} only checks the setting when the app starts.`; }
     else if (browser) { path = LS + browser; tail = ` set to While Using the App, and allow location for this site when ${browser} asks.`; }
     else { path = LS + 'Safari Websites'; tail = ' set to While Using the App (or, if this page was opened from inside another app, System Services › In-App Web Browsing switched on).'; }
     const b = document.createElement('b'); b.textContent = path;
